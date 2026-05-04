@@ -5,15 +5,15 @@ VoltChain is a decentralized community microgrid energy trading platform built o
 ## 🧩 Components
 
 ### 1. Soroban Smart Contracts (`/contracts`)
-- **EnergyTrade**: Handles the core logic for P2P energy sales.
+- **EnergyTrade**: Handles the core logic for P2P energy sales. Now includes **persistent storage** for trade history and event emission for off-chain indexing.
 - **MicrogridRegistry**: Manages community microgrid metadata and prosumer/consumer roles.
 - **OracleConsumer**: Interfaces with off-chain smart meters to verify energy production/consumption.
 
 ### 2. Backend API (`/backend`)
 - **Actix Web**: High-performance Rust web framework for the REST API.
-- **PostgreSQL**: Stores off-chain metadata, historical trade data, and user profiles.
+- **PostgreSQL**: Stores persistent trade history using **Diesel ORM** for type-safe queries.
 - **Redis**: Caching layer for real-time energy production data and session management.
-- **Diesel ORM**: Type-safe database interactions.
+- **Migrations**: Automated DB schema management for reliable deployments.
 
 ### 3. Frontend Dashboard (`/frontend`)
 - **Next.js 14**: Modern React framework with App Router.
