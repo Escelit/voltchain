@@ -123,18 +123,9 @@ npm run dev
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! To get started:
+We welcome contributions from the community! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, branching strategy, and the process for submitting pull requests.
 
-1.  **Fork** the repository.
-2.  **Create a feature branch**: `git checkout -b feat/my-new-feature`.
-3.  **Commit your changes**: Follow [Conventional Commits](https://www.conventionalcommits.org/).
-4.  **Push to the branch**: `git push origin feat/my-new-feature`.
-5.  **Open a Pull Request**.
-
-### Coding Standards
-- **Rust**: Run `cargo fmt` and `cargo clippy` before committing.
-- **Frontend**: Ensure all TypeScript types are explicitly defined.
-- **Documentation**: Update the `docs/` folder for any architectural changes.
+---
 
 ---
 
