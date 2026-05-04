@@ -10,12 +10,13 @@
 
 ## 🎯 The Vision
 
-VoltChain addresses the **$850 billion energy access gap** for underserved communities. By leveraging the Stellar blockchain, we enable:
+VoltChain is a decentralized platform designed to bridge the **$850 billion energy access gap** for underserved communities. By leveraging the **Stellar** blockchain and **Soroban** smart contracts, we enable a transparent, efficient, and low-cost marketplace for peer-to-peer (P2P) energy trading.
 
-✅ **Peer-to-Peer Trading**: Direct energy sales between prosumers and consumers at fair market rates.
-✅ **Smart Metering**: Verified consumption via Soroban Smart Contracts and oracle integration.
-✅ **Near-Zero Fees**: Extremely low transaction costs with fast finality on Stellar.
-✅ **Green Certification**: On-chain renewable energy certificates (RECs) minted from verified solar/wind data.
+### Key Pillars:
+- **Democratized Energy**: Direct sales between prosumers (households with solar/wind) and consumers.
+*   **Trustless Verification**: Energy production is verified via on-chain oracles linked to IoT smart meters.
+*   **Extreme Efficiency**: Transaction costs under **$0.0001** with **~5s finality**.
+*   **Sustainability**: Automated minting of Renewable Energy Certificates (RECs).
 
 ---
 
@@ -27,20 +28,35 @@ VoltChain addresses the **$850 billion energy access gap** for underserved commu
 
 ## 🏗️ Architecture Stack
 
-### Core Technology
-- **Blockchain**: Stellar (Soroban Smart Contracts)
-- **Backend API**: Rust (Actix Web, PostgreSQL, Redis, Diesel ORM)
-- **Frontend**: Next.js 14 (React, TailwindCSS, Recharts)
+### Why this stack?
+- **Soroban (Stellar)**: Chosen for its WASM-based execution environment which offers predictable fees and high performance compared to EVM.
+- **Rust (Actix-Web)**: Provides memory safety and high concurrency for handling thousands of IoT meter data points.
+- **Next.js 14**: Enables server-side rendering for SEO and a premium, responsive UI experience.
 
-### System Flow
+### System Topology
 ```mermaid
 graph TD
-    A[Smart Meter] -->|Energy Data| B(Rust Backend)
-    B -->|Persist| C[(PostgreSQL)]
-    B -->|Trigger| D[Soroban Smart Contract]
-    D -->|Settle Trade| E{Stellar Ledger}
-    F[User Dashboard] -->|Interact| B
-    F -->|Sign| E
+    subgraph "IoT Layer"
+        A[Smart Meter] -->|Encrypted kWh Data| B(IoT Gateway)
+    end
+    
+    subgraph "Backend Layer (Rust)"
+        B -->|REST/Websocket| C{Actix-Web API}
+        C -->|CRUD| D[(PostgreSQL)]
+        C -->|Cache| E[(Redis)]
+    end
+    
+    subgraph "Blockchain Layer (Stellar)"
+        C -->|Submit Transaction| F[Soroban Smart Contract]
+        F -->|Emit Events| G[Event Indexer]
+        G -->|Update Feed| C
+        F -->|Settle Asset| H{Stellar Ledger}
+    end
+    
+    subgraph "Frontend Layer"
+        I[User Dashboard] -->|Interact| C
+        I -->|Sign Transaction| H
+    end
 ```
 
 ---
@@ -48,69 +64,88 @@ graph TD
 ## 🚀 Getting Started
 
 ### Prerequisites
-- **Rust** (Latest stable)
-- **Node.js** (v18+)
-- **Stellar CLI** (`cargo install --locked stellar-cli`)
-- **PostgreSQL** (Running instance)
+- **Rust**: `rustup default stable`
+- **Node.js**: v18 or v20
+- **Stellar CLI**: `cargo install --locked stellar-cli`
+- **Docker**: (Optional, for PostgreSQL/Redis)
 
-### Installation
+### 🛠️ Detailed Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone git@github-legend-esc:legend-esc/voltchain.git
-   cd voltchain
+#### 1. Smart Contracts
+```bash
+cd contracts
+stellar contract build
+# Run unit tests
+stellar contract test
+```
+
+#### 2. Backend API
+1. Create a `.env` file in `/backend`:
+   ```env
+   DATABASE_URL=postgres://user:pass@localhost/voltchain
+   REDIS_URL=redis://127.0.0.1/
+   RUST_LOG=info
    ```
-
-2. **Setup Smart Contracts**
-   ```bash
-   cd contracts
-   stellar contract build
-   stellar contract test
-   ```
-
-3. **Setup Backend**
+2. Run migrations and start:
    ```bash
    cd backend
-   # Ensure DATABASE_URL is set in .env
    cargo run
    ```
 
-4. **Setup Frontend**
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
----
-
-## 📂 Repository Structure
-
-```text
-voltchain/
-├── contracts/        # Soroban Smart Contracts (Rust)
-│   └── energy-trade/ # Core P2P trading logic
-├── backend/          # Rust Actix-Web API
-│   ├── migrations/   # Diesel SQL migrations
-│   └── src/          # API Handlers & Models
-├── frontend/         # Next.js Dashboard
-│   ├── src/components/ Dashboard UI
-│   └── src/app/      # App Router & Styling
-├── docs/             # Technical documentation
-└── scripts/          # Deployment & Management scripts
+#### 3. Frontend Dashboard
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
 
-## 🛠️ Roadmap
+## 🔌 API Reference
 
-- [x] Initial Scaffolding & Architecture
-- [x] Stateful Smart Contracts with Storage
-- [x] Backend Persistence (Diesel/Postgres)
-- [x] Premium Frontend Dashboard UI
-- [ ] Stellar Wallet Integration (Freighter)
-- [ ] Actual XLM/Token Settlement Logic
-- [ ] IoT Smart Meter Oracle Integration
+### Trades
+- `GET /trades`: List all historical trades.
+- `POST /trades`: Record a new energy transaction.
+- `GET /trades/{id}`: Fetch details of a specific trade.
+
+### Health
+- `GET /health`: Check API and Database connectivity.
+
+---
+
+## 📜 Smart Contract Interface
+
+### `EnergyTradeContract`
+- `trade(prosumer, consumer, amount_kwh, price_per_kwh)`: Executes and records a trade.
+- `get_trades()`: Returns a vector of all trade records on-chain.
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the community! To get started:
+
+1.  **Fork** the repository.
+2.  **Create a feature branch**: `git checkout -b feat/my-new-feature`.
+3.  **Commit your changes**: Follow [Conventional Commits](https://www.conventionalcommits.org/).
+4.  **Push to the branch**: `git push origin feat/my-new-feature`.
+5.  **Open a Pull Request**.
+
+### Coding Standards
+- **Rust**: Run `cargo fmt` and `cargo clippy` before committing.
+- **Frontend**: Ensure all TypeScript types are explicitly defined.
+- **Documentation**: Update the `docs/` folder for any architectural changes.
+
+---
+
+## 🛠️ Project Roadmap
+
+- [x] **Milestone 1**: Initial Scaffolding & Monorepo Setup.
+- [x] **Milestone 2**: Stateful Smart Contracts & Event Emission.
+- [x] **Milestone 3**: Backend Persistence Layer (Diesel/Postgres).
+- [ ] **Milestone 4**: Stellar Wallet Integration (Freighter).
+- [ ] **Milestone 5**: Real Asset Settlement (XLM/Tokens).
+- [ ] **Milestone 6**: IoT Oracle & Real-time Meter Data.
 
 ---
 
