@@ -1,12 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area 
 } from 'recharts';
-import { Zap, TrendingUp, Shield, Activity, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Zap, TrendingUp, Shield, Activity, ArrowUpRight, ArrowDownLeft, Plus } from 'lucide-react';
 
-const data = [
+interface Trade {
+  id: string;
+  prosumer_address: string;
+  consumer_address: string;
+  amount_kwh: number;
+  price_per_kwh: number;
+  timestamp: string;
+}
+
+const mockChartData = [
   { name: '00:00', generation: 400, consumption: 240 },
   { name: '04:00', generation: 300, consumption: 139 },
   { name: '08:00', generation: 200, consumption: 980 },
@@ -16,34 +25,85 @@ const data = [
   { name: '23:59', generation: 349, consumption: 430 },
 ];
 
-const trades = [
-  { id: 1, type: 'Sell', amount: '15.5 kWh', price: '0.12 XLM', status: 'Completed', time: '2 mins ago' },
-  { id: 2, type: 'Buy', amount: '8.2 kWh', price: '0.15 XLM', status: 'Pending', time: '15 mins ago' },
-  { id: 3, type: 'Sell', amount: '22.0 kWh', price: '0.11 XLM', status: 'Completed', time: '1 hour ago' },
-];
-
 export default function Dashboard() {
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTrades();
+  }, []);
+
+  const fetchTrades = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/trades');
+      if (res.ok) {
+        const data = await res.json();
+        setTrades(data);
+      }
+    } catch (err) {
+      console.warn("Backend not available, using mock data");
+      setTrades([
+        { id: '1', prosumer_address: 'GB...123', consumer_address: 'GB...456', amount_kwh: 15.5, price_per_kwh: 0.12, timestamp: '2026-05-04T12:00:00Z' },
+        { id: '2', prosumer_address: 'GB...789', consumer_address: 'GB...101', amount_kwh: 8.2, price_per_kwh: 0.15, timestamp: '2026-05-04T12:15:00Z' },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createTrade = async () => {
+    const newTrade = {
+      id: crypto.randomUUID(),
+      prosumer_address: "GB" + Math.random().toString(36).substring(7).toUpperCase(),
+      consumer_address: "GB" + Math.random().toString(36).substring(7).toUpperCase(),
+      amount_kwh: parseFloat((Math.random() * 20).toFixed(2)),
+      price_per_kwh: parseFloat((Math.random() * 0.2).toFixed(2)),
+    };
+
+    try {
+      const res = await fetch('http://localhost:8080/trades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTrade),
+      });
+      if (res.ok) {
+        fetchTrades();
+      }
+    } catch (err) {
+      setTrades([ { ...newTrade, timestamp: new Date().toISOString() }, ...trades ]);
+    }
+  };
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <header className="flex justify-between items-end">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-4xl font-bold text-gradient">VoltChain Dashboard</h1>
           <p className="text-slate-400 mt-2">Empowering community energy trading on Stellar</p>
         </div>
-        <div className="glass px-6 py-3 rounded-2xl flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-xs text-slate-500 uppercase tracking-wider">Wallet Balance</p>
-            <p className="text-xl font-mono font-bold text-amber-500">1,240.50 XLM</p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-            <Shield className="text-amber-500 w-5 h-5" />
+        <div className="flex gap-4">
+          <button 
+            onClick={createTrade}
+            className="glass px-6 py-3 rounded-2xl flex items-center gap-2 hover:bg-amber-500 hover:text-black transition-all group"
+          >
+            <Plus size={20} className="text-amber-500 group-hover:text-black" />
+            <span className="font-bold">New Trade</span>
+          </button>
+          <div className="glass px-6 py-3 rounded-2xl flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-xs text-slate-500 uppercase tracking-wider">Wallet Balance</p>
+              <p className="text-xl font-mono font-bold text-amber-500">1,240.50 XLM</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+              <Shield className="text-amber-500 w-5 h-5" />
+            </div>
           </div>
         </div>
       </header>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Current Generation', value: '4.2 kW', icon: Zap, color: 'text-amber-500' },
           { label: 'Total Traded', value: '1,280 kWh', icon: TrendingUp, color: 'text-emerald-500' },
@@ -67,7 +127,7 @@ export default function Dashboard() {
             <Activity className="text-amber-500" /> Energy Activity (24h)
           </h2>
           <ResponsiveContainer width="100%" height="85%">
-            <AreaChart data={data}>
+            <AreaChart data={mockChartData}>
               <defs>
                 <linearGradient id="colorGen" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
@@ -91,34 +151,27 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass p-8 rounded-3xl">
+        <div className="glass p-8 rounded-3xl overflow-hidden flex flex-col">
           <h2 className="text-xl font-semibold mb-6">Recent Trades</h2>
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-y-auto flex-1 pr-2 custom-scrollbar">
             {trades.map((trade) => (
-              <div key={trade.id} className="flex items-center justify-between group cursor-pointer">
+              <div key={trade.id} className="flex items-center justify-between group cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    trade.type === 'Sell' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'
-                  }`}>
-                    {trade.type === 'Sell' ? <ArrowUpRight size={20} /> : <ArrowDownLeft size={20} />}
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-amber-500/10 text-amber-500">
+                    <ArrowUpRight size={20} />
                   </div>
                   <div>
-                    <p className="font-medium">{trade.type} {trade.amount}</p>
-                    <p className="text-xs text-slate-500">{trade.time}</p>
+                    <p className="font-medium">{trade.amount_kwh} kWh</p>
+                    <p className="text-xs text-slate-500">{new Date(trade.timestamp).toLocaleTimeString()}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono font-bold">{trade.price}</p>
-                  <p className={`text-[10px] uppercase tracking-wider ${
-                    trade.status === 'Completed' ? 'text-emerald-500' : 'text-amber-500'
-                  }`}>{trade.status}</p>
+                  <p className="font-mono font-bold text-amber-500">{trade.price_per_kwh} XLM</p>
+                  <p className="text-[10px] uppercase tracking-wider text-emerald-500">Completed</p>
                 </div>
               </div>
             ))}
           </div>
-          <button className="w-full mt-8 py-3 rounded-2xl bg-amber-500 text-black font-bold hover:bg-amber-400 transition-colors">
-            New Trade
-          </button>
         </div>
       </div>
     </div>
