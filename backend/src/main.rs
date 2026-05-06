@@ -2,6 +2,7 @@ use actix_web::{App, HttpServer, web, middleware::Logger};
 use actix_cors::Cors;
 use dotenvy::dotenv;
 
+mod config;
 mod db;
 mod models;
 mod handlers;
@@ -12,9 +13,17 @@ async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    log::info!("Starting VoltChain Backend API...");
+    let cfg = config::Config::from_env();
+    log::info!("Starting VoltChain Backend API on {}:{}", cfg.host, cfg.port);
+
+    if cfg.contract_id.is_none() {
+        log::warn!("CONTRACT_ID not set — on-chain integration disabled");
+    } else {
+        log::info!("Contract ID: {}", cfg.contract_id.as_deref().unwrap());
+    }
 
     let pool = db::init_pool();
+    let bind_addr = format!("{}:{}", cfg.host, cfg.port);
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -25,7 +34,6 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
-
             .wrap(Logger::default())
             .wrap(cors)
             .service(handlers::health_check)
@@ -33,7 +41,7 @@ async fn main() -> std::io::Result<()> {
             .service(handlers::create_trade)
             .service(handlers::get_trade)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(bind_addr)?
     .run()
     .await
 }
