@@ -34,8 +34,9 @@ export default function Dashboard() {
   }, []);
 
   const fetchTrades = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     try {
-      const res = await fetch('http://localhost:8080/trades');
+      const res = await fetch(`${apiUrl}/trades`);
       if (res.ok) {
         const data = await res.json();
         setTrades(data);
@@ -52,6 +53,7 @@ export default function Dashboard() {
   };
 
   const createTrade = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     const newTrade = {
       id: crypto.randomUUID(),
       prosumer_address: "GB" + Math.random().toString(36).substring(7).toUpperCase(),
@@ -61,7 +63,7 @@ export default function Dashboard() {
     };
 
     try {
-      const res = await fetch('http://localhost:8080/trades', {
+      const res = await fetch(`${apiUrl}/trades`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTrade),
