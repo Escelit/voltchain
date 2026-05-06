@@ -8,7 +8,9 @@ node_modules/
 .next/
 out/
 build/
-.env*
+.env
+.env.local
+.env.*.local
 .DS_Store
 
 # Soroban
