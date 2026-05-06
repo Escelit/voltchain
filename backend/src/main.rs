@@ -7,6 +7,7 @@ mod db;
 mod models;
 mod handlers;
 mod schema;
+mod stellar_sync;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
