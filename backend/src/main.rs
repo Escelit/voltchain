@@ -23,6 +23,10 @@ async fn main() -> std::io::Result<()> {
         log::info!("Contract ID: {}", cfg.contract_id.as_deref().unwrap());
     }
 
+    if cfg.admin_secret_key.is_none() {
+        log::warn!("ADMIN_SECRET_KEY not set — on-chain contract calls disabled");
+    }
+
     let pool = db::init_pool();
     let bind_addr = format!("{}:{}", cfg.host, cfg.port);
 
@@ -54,6 +58,7 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(cfg.clone()))
             .wrap(Logger::default())
             .wrap(cors)
             .service(handlers::health_check)

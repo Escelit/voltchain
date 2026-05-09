@@ -14,6 +14,18 @@ pub struct EnergyTrade {
     pub amount_kwh: f64,
     pub price_per_kwh: f64,
     pub timestamp: NaiveDateTime,
+    pub tx_hash: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TradeResponse {
+    pub id: Uuid,
+    pub prosumer_address: String,
+    pub consumer_address: String,
+    pub amount_kwh: f64,
+    pub price_per_kwh: f64,
+    pub timestamp: NaiveDateTime,
+    pub tx_hash: Option<String>,
 }
 
 #[derive(Deserialize, Insertable)]
