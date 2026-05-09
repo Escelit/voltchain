@@ -17,5 +17,6 @@ diesel::table! {
         amount_kwh -> Float8,
         price_per_kwh -> Float8,
         timestamp -> Timestamp,
+        tx_hash -> Nullable<Varchar>,
     }
 }

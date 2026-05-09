@@ -9,6 +9,7 @@ pub struct Config {
     pub contract_id: Option<String>,
     pub soroban_rpc_url: String,
     pub stellar_network: String,
+    pub admin_secret_key: Option<String>,
 }
 
 impl Config {
@@ -25,6 +26,7 @@ impl Config {
                 .unwrap_or_else(|_| "https://soroban-testnet.stellar.org".to_string()),
             stellar_network: env::var("STELLAR_NETWORK")
                 .unwrap_or_else(|_| "testnet".to_string()),
+            admin_secret_key: env::var("ADMIN_SECRET_KEY").ok().filter(|s| !s.is_empty()),
         }
     }
 }
