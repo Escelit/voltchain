@@ -26,6 +26,25 @@ async fn main() -> std::io::Result<()> {
     let pool = db::init_pool();
     let bind_addr = format!("{}:{}", cfg.host, cfg.port);
 
+    // Spawn background sync task if contract_id is configured
+    if let Some(ref contract_id) = cfg.contract_id {
+        let contract_id_clone = contract_id.clone();
+        let soroban_rpc_url_clone = cfg.soroban_rpc_url.clone();
+        let pool_clone = pool.clone();
+        
+        tokio::spawn(async move {
+            if let Err(e) = stellar_sync::sync_trade_events(
+                &contract_id_clone,
+                &soroban_rpc_url_clone,
+                &pool_clone,
+            ).await {
+                log::error!("Background sync task failed: {}", e);
+            }
+        });
+        
+        log::info!("Started background trade sync task");
+    }
+
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin()
